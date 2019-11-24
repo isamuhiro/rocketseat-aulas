@@ -1,53 +1,56 @@
-const express = require("express");
+const express = require("express")
 
-const server = express();
+const app = express()
 
-const users = ["Dhiego", "Max", "aaa"];
+app.use(express.json());
 
-server.use(express.json());
+let projects = [
+    { id: "1", title: 'Novo projeto', tasks: [] },
+    { id: "2", title: 'Antigo projeto', tasks: [] }
+];
 
-server.use((req, res, next) => {
-    console.time("Request")
-    console.log(`method: ${req.method}, url: ${req.url}`);
-
-    console.timeEnd("Request")
-    return next();
+app.get("/projects", (req, res) => {
+    res.json(projects)
 })
 
-function checkUserExists(req, res, next) {
-    if (!req.body.name) return res.status(400).json({ error: "User not found" })
-    return next()
-}
+app.post("/project", (req, res) => {
+    const { id, title } = req.body;
 
-server.get("/users/:index", (req, res) => {
-    const { index } = req.params;
+    projects.push({ id, title, tasks: [] })
+    res.json(projects);
+})
 
-    res.json({ message: users[index] })
+app.post("/project/:id/tasks", (req, res) => {
+    const { title } = req.body;
+    const { id } = req.params;
+
+    projects.map(project => {
+        if (project.id == id) project.tasks.push(title)
+    });
+    
+    res.json(projects);
+})
+
+app.put("/project/:id", (req, res) => {
+    const { title } = req.body;
+    const { id } = req.params;
+
+    projects.map(project => {
+        if (project.id == id) project.title = title
+    });
+
+    res.json(projects);
 });
 
-server.get("/users/", (req, res) => {
-    res.json({ users })
+app.delete("/project/:id", (req, res) => {
+    const { id } = req.params;
+
+    projects = projects.filter((project) => {
+        if (project.id != id) return !!project;
+    });
+
+    res.json(projects);
 });
 
-server.post("/user/", checkUserExists, (req, res) => {
-    const { name } = req.body
-    users.push(name)
-    res.json({ users })
-});
 
-server.put("/user/:index", checkUserExists, (req, res) => {
-    const { index } = req.params;
-    const { name } = req.body
-    users[index] = name;
-    res.json({ users });
-});
-
-server.delete("/user/:index", (req, res) => {
-    const { index } = req.params;
-
-    users.splice(index, 1);
-
-    res.json({ users });
-});
-
-server.listen(3000);
+app.listen(3000, () => console.log("puto"))
